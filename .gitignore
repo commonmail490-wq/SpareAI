@@ -1,0 +1,19 @@
+# Build output
+spareai/target/
+
+# Python virtual environment
+spareai/flask-service/.venv/
+**/__pycache__/
+*.py[cod]
+
+# IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs and local env files
+*.log
+.env
+.env.*

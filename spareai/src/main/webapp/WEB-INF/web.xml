@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>SpareAI</display-name>
+
+    <!--
+      DB configuration:
+      - Prefer environment variables or Java system properties in Tomcat.
+      - Supported keys:
+          SPAREAI_DB_URL (or -Dspareai.db.url)
+          SPAREAI_DB_USER (or -Dspareai.db.user)
+          SPAREAI_DB_PASSWORD (or -Dspareai.db.password)
+          SPAREAI_DB_POOL_SIZE (or -Dspareai.db.poolSize)
+
+      Flask forecast service:
+          SPAREAI_FLASK_URL (or -Dspareai.flask.url) default http://localhost:5001
+    -->
+
+    <filter>
+        <filter-name>CorsFilter</filter-name>
+        <filter-class>com.spareai.util.CorsFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CorsFilter</filter-name>
+        <url-pattern>/api/*</url-pattern>
+    </filter-mapping>
+
+    <servlet>
+        <servlet-name>InventoryServlet</servlet-name>
+        <servlet-class>com.spareai.servlets.InventoryServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InventoryServlet</servlet-name>
+        <url-pattern>/api/inventory/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ConsumptionServlet</servlet-name>
+        <servlet-class>com.spareai.servlets.ConsumptionServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ConsumptionServlet</servlet-name>
+        <url-pattern>/api/consumption/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ForecastServlet</servlet-name>
+        <servlet-class>com.spareai.servlets.ForecastServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ForecastServlet</servlet-name>
+        <url-pattern>/api/forecast/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ChartServlet</servlet-name>
+        <servlet-class>com.spareai.servlets.ChartServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ChartServlet</servlet-name>
+        <url-pattern>/api/charts/*</url-pattern>
+    </servlet-mapping>
+
+</web-app>
