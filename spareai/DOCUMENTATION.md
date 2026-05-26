@@ -49,7 +49,7 @@ spareai/flask-service/app.py   spareai/src/main/webapp/ui/dashboard.jsp
 
 | Table | Purpose |
 |-------|---------|
-| `inventory_items` | Master list of materials: codes, names, categories, stock, reorder levels, unit cost, location. |
+| `inventory_items` | Master list of materials: codes, names, categories, stock, reorder levels, **per-material alert parameters**, unit cost, location. |
 | `consumption_log` | Individual consumption/issue rows: material, quantity, date, optional department and remarks. |
 | `forecast_cache` | Cached Prophet (or fallback) forecast JSON per material and horizon (`forecast_horizon`), with `expires_at`. |
 | `audit_log` | Audit trail for consumption insert/update/delete (`entity_type`, JSON old/new values, `source_ip`). |
@@ -72,7 +72,17 @@ spareai/flask-service/app.py   spareai/src/main/webapp/ui/dashboard.jsp
 | GET | `/export-csv` | **CSV file** (not JSON): columns `material_code,item_name,category,unit,location,stock_qty,reorder_level,unit_cost,last_updated`. |
 | GET | `/{code}` | JSON `data`: `{ "item": <InventoryItem> }` or 404. |
 | POST | `/add` | JSON body creates row; `201` with `data.item_id`. |
-| PUT | `/update/{code}` | JSON body merges fields; `data`: `{ "updated": true }`. |
+| PUT | `/update/{code}` | JSON body merges fields (including parameter columns); `data`: `{ "updated": true }`. |
+
+**Parameters** — servlet prefix: `/api/parameters` — class `ParametersServlet`
+
+| Method | Endpoint (pathInfo) | Returns |
+|--------|---------------------|---------|
+| GET | `/list` or `/` | JSON `data`: `{ "items": [...], "total": <int> }` — all materials with parameter fields and `avgDailyConsumption` (365-day lookback). |
+| PUT | `/{code}` | JSON body updates reorder level and all parameter columns for one material. |
+| POST | `/bulk` | JSON body `{ "updates": [ { "material_code", "reorder_level", "critical_pct", ... }, ... ] }`. Returns `{ "updated": <count>, "errors": [...] }`. |
+
+**Preset defaults (UI only):** The Stock Parameters page provides **Original defaults (Excel)** — reorder levels from `assets/excel-inventory-baseline.json` (generated from `spareai_real_data.sql` via `db/gen-excel-baseline.py`) plus legacy alert thresholds — and **New defaults** — consumption-based reorder and tuned thresholds. Both apply via `POST /bulk`.
 
 **Consumption** — prefix: `/api/consumption` — `ConsumptionServlet`
 
@@ -141,15 +151,16 @@ spareai/flask-service/app.py   spareai/src/main/webapp/ui/dashboard.jsp
 - **How data is fetched:** `spareai-dashboard.js` uses **`fetch()`** against paths like `` `${CONTEXT_PATH}/api/inventory/summary` `` (see `apiFetch` / `api`).
 - **Response shape:** Servlets wrap payloads as `{ "success": true, "data": ... }` (`JsonUtil.success`). The JS helper `api()` unwraps `data` when present.
 
-**Five “pages” (single-page style via hash routing):**
+**Six “pages” (single-page style via hash routing):**
 
 | Hash / `data-page` | Section id | What it shows |
 |--------------------|--------------|----------------|
-| `overview` | `page-overview` | KPI tiles, quick stats, top consumed / closest to stockout mini-tables, monthly sparkline, alerts. Loads `/api/inventory/summary`, `/list`, `/low-stock`, `/forecast/critical`, `/consumption/history`. |
+| `overview` | `page-overview` | KPI tiles, quick stats, top consumed / closest to stockout mini-tables, monthly sparkline, alerts. Loads `/api/inventory/summary`, `/list`, `/low-stock`, `/forecast/critical`, `/consumption/history`. Uses **per-material** thresholds from `inventory_items`. |
 | `charts` | `page-charts` | Stock levels, category doughnut, department consumption, consumption trend, cumulative, compare materials. Uses `/api/charts/*` and `/api/inventory/list`. |
-| `inventory` | `page-inventory` | Sortable/filterable table, client pagination (**25 rows per page**, `PAGE_SIZE` in JS). `/api/inventory/list`, `/api/forecast/critical` for consumption rate column. |
-| `critical` | `page-critical` | Merged low-stock + forecast days-to-zero; tabs by severity; export CSV. `/api/inventory/low-stock`, `/api/forecast/critical`. |
+| `inventory` | `page-inventory` | Sortable/filterable table, client pagination (**25 rows per page**, `PAGE_SIZE` in JS). `/api/inventory/list`, `/api/forecast/critical` for consumption rate column. Status badges use per-material `critical_pct` and `alerts_enabled`. |
+| `critical` | `page-critical` | Merged low-stock + forecast days-to-zero; tabs by severity (**urgent** / **warning** / **watch** from per-material `urgent_days`, `warning_days`). `/api/inventory/low-stock`, `/api/forecast/critical`. |
 | `forecast` | `page-forecast` | Material selector, horizon 30/60/90, uncertainty band toggle, Chart.js forecast + historical chart, procurement text box. `/api/forecast/{code}?horizon=`. |
+| `parameters` | `page-parameters` | Editable table: reorder level, safety stock, critical %, urgent/warning days, overstock multiplier, reorder qty factor, lead time, max stock, min order, priority, alerts, notes. `/api/parameters/list`, `PUT /{code}`, `POST /bulk`. Preset buttons: **Original defaults (Excel)**, **New defaults**. |
 
 **Chart.js:** Loaded from CDN (`chart.umd.min.js`); **zoom** plugin registered for forecast chart. Charts are created in JS (`new Chart(...)`) with datasets built from API JSON.
 
@@ -426,8 +437,22 @@ SpareAI expects:
 | `location` | VARCHAR(100) | NO | Stored as **location** in DB; UI maps “department” display from **`location`** in `spareai-dashboard.js` (`itemDepartment`). |
 | `stock_qty` | DECIMAL(10,2) | YES | Current on-hand quantity (default 0). |
 | `reorder_level` | DECIMAL(10,2) | YES | Reorder threshold (default 0). |
+| `safety_stock` | DECIMAL(10,2) | NO | Optional; if NULL, UI uses `reorder_level` as safety stock. |
+| `critical_pct` | DECIMAL(5,4) | YES | CRITICAL when `stock_qty <= reorder_level * critical_pct` (default 0.5). |
+| `urgent_days` | INT | YES | URGENT severity when days-to-zero ≤ this (default 7). |
+| `warning_days` | INT | YES | WARNING severity when days-to-zero ≤ this; must be > `urgent_days` (default 30). |
+| `overstock_multiplier` | DECIMAL(5,2) | YES | Overstock alert when stock > reorder × this (default 3). |
+| `reorder_qty_factor` | DECIMAL(5,2) | YES | Suggested reorder qty = gap × this (default 1.5). |
+| `lead_time_days` | INT | NO | Lead time for procurement hints. |
+| `max_stock` | DECIMAL(10,2) | NO | Optional max stock cap. |
+| `min_order_qty` | DECIMAL(10,2) | NO | Minimum suggested order quantity. |
+| `alerts_enabled` | TINYINT(1) | YES | If 0, excluded from low-stock list and status alerts (default 1). |
+| `priority` | INT | YES | Sort priority on Critical page (default 0). |
+| `param_notes` | VARCHAR(500) | NO | Planner notes. |
 | `unit_cost` | DECIMAL(12,2) | NO | Cost per unit for value KPIs (nullable, treated as 0 in sums). |
 | `last_updated` | TIMESTAMP | YES | Auto-maintained by MySQL `ON UPDATE CURRENT_TIMESTAMP`. |
+
+> **Migration:** Existing databases add these columns via `db/add-material-parameters.sql`.
 
 #### Table 2: `consumption_log` (consumption history)
 
@@ -521,6 +546,8 @@ FROM erp_material_valuation;
 
 Inventory (`/api/inventory`): `GET /list`, `GET /low-stock`, `GET /summary`, `GET /export-csv`, `GET /{code}`, `POST /add`, `PUT /update/{code}`.
 
+Parameters (`/api/parameters`): `GET /list`, `PUT /{code}`, `POST /bulk`.
+
 Consumption (`/api/consumption`): `GET /history`, `GET /monthly/{code}`, `POST /record`, `PUT /edit/{log_id}`, `DELETE /delete/{log_id}`.
 
 Forecast (`/api/forecast`): `GET /{code}?horizon=`, `GET /critical`, `GET /all?horizon=`, `GET /reorder/{code}?horizon=`, `POST /refresh/{code}?horizon=`.
@@ -532,6 +559,7 @@ Prefix all with the Tomcat context (e.g. `/spareai`).
 ### 6.2 Startup Checklist
 
 - [ ] MySQL running with `spareai` database and `db/schema.sql` applied  
+- [ ] `db/add-material-parameters.sql` applied if upgrading an older database  
 - [ ] `SPAREAI_DB_*` and `SPAREAI_FLASK_URL` set (do **not** rely on default password in production)  
 - [ ] `pip install -r spareai/flask-service/requirements.txt`  
 - [ ] Flask running (`python app.py` → port **5001**)  
@@ -540,6 +568,8 @@ Prefix all with the Tomcat context (e.g. `/spareai`).
 - [ ] Tomcat 10 started  
 - [ ] Verify: `GET /spareai/api/inventory/list` returns `{ "success": true, "data": { "items": ... } }`  
 - [ ] Verify: `/spareai/ui/dashboard.jsp` loads Overview  
+- [ ] Verify: `/spareai/api/parameters/list` returns items with `criticalPct`, `urgentDays`, etc.  
+- [ ] Verify: Sidebar shows **Stock Parameters** (redeploy WAR after pull if missing)  
 
 ### 6.3 Troubleshooting Common Issues
 
@@ -551,13 +581,18 @@ Prefix all with the Tomcat context (e.g. `/spareai`).
 | Department chart missing | Parser hides section when shape empty | Ensure `consumption_log.department` populated; check `/api/charts/department-consumption` JSON |
 | Dark mode issues | Theme-specific CSS | `body.dark-mode` rules in `spareai.css`; charts use `chartUiColors()` in JS |
 | Only 25 inventory rows visible | Client `PAGE_SIZE=25` | Use pagination controls; data is still fully loaded from `/list` unless you change JS |
+| Stock Parameters missing | Old WAR deployed | Run `redeploy.bat` or `startup.bat`; hard-refresh browser |
+| `Unknown column 'urgent_days'` | Migration not applied | Run `db/add-material-parameters.sql` |
+| Original defaults wrong reorder | Regenerate baseline | `python db/gen-excel-baseline.py` after updating `spareai_real_data.sql` |
 
 ---
 
 ## 7. Glossary
 
 - **Material Code:** Unique identifier for a spare part (`material_code`).
-- **Reorder Level:** `reorder_level` — threshold for low-stock logic (`stock_qty <= reorder_level` in SQL).
+- **Reorder Level:** `reorder_level` — threshold for low-stock logic (`stock_qty <= reorder_level` when `alerts_enabled = 1`).
+- **Critical %:** `critical_pct` — fraction of reorder level for CRITICAL status (e.g. 0.5 = 50%).
+- **Stock Parameters:** Dashboard page and `/api/parameters` for per-material thresholds.
 - **Days to Zero:** Estimated days until stock runs out at recent average consumption (`days_to_zero_estimate` from `/api/forecast/critical`).
 - **yhat:** Prophet’s central forecast value for a given `ds`.
 - **Uncertainty Band:** Range from `yhat_lower` to `yhat_upper` around `yhat`.

@@ -9,6 +9,8 @@ SpareAI is a predictive inventory dashboard for spare-parts management. The repo
 
 The web UI is served from Tomcat. Forecast requests go from the Java API to the Flask service on port `5001`.
 
+**Dashboard features:** Overview KPIs, charts, inventory table, critical stock, demand forecast, and **Stock Parameters** (per-material reorder levels and alert thresholds with Excel-based and consumption-based preset defaults).
+
 ## What you need
 
 Install these tools on Windows before you run the project. Use **Command Prompt (cmd.exe)** for the commands in this guide unless a step says otherwise.
@@ -145,6 +147,19 @@ Optional sample data:
 SOURCE spareai/spareai_real_data.sql;
 ```
 
+**Existing databases** (created before Stock Parameters): apply the column migration once:
+
+```sql
+SOURCE spareai/db/add-material-parameters.sql;
+```
+
+Or from Command Prompt:
+
+```cmd
+cd spareai\db
+apply-material-parameters.bat
+```
+
 You can run the same SQL files from MySQL Workbench if you prefer a GUI.
 
 ### Set database credentials for the Java backend
@@ -188,30 +203,31 @@ curl http://localhost:5001/health
 
 Leave this Command Prompt window open while you use the application.
 
-## Build the Java backend
+## Build and run (Windows scripts)
 
-Open a **second** Command Prompt window.
+Copy `spareai\set-local.bat.example` to `spareai\set-local.bat` and set your Tomcat path (`CATALINA_HOME`) if it differs from the default.
+
+From the repository root, **`spareai\startup.bat`** does the following in order:
+
+1. Start MySQL (`MySQL80` service)
+2. Build `spareai.war` with Maven
+3. Remove the old exploded app and copy the new WAR to Tomcat `webapps\`
+4. Start Tomcat
+5. Start the Flask forecast service
 
 ```cmd
 cd spareai
-mvn clean package
+startup.bat
 ```
 
-After a successful build, the WAR file is here:
-
-```text
-spareai\target\spareai.war
-```
-
-## Deploy to Tomcat
-
-Copy the WAR into Tomcat:
+To rebuild and redeploy only (Tomcat already configured):
 
 ```cmd
-copy /Y target\spareai.war C:\apache-tomcat-10.1.44\webapps\
+cd spareai
+redeploy.bat
 ```
 
-Set the backend environment variables in the same Command Prompt session if you have not already:
+Set backend environment variables before starting Tomcat if you are not using defaults (same session as Tomcat, or system-wide):
 
 ```cmd
 set SPAREAI_DB_URL=jdbc:mysql://localhost:3306/spareai?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -220,14 +236,18 @@ set SPAREAI_DB_PASSWORD=YOUR_MYSQL_PASSWORD
 set SPAREAI_FLASK_URL=http://localhost:5001
 ```
 
-Start Tomcat:
+### Manual build and deploy
 
 ```cmd
+cd spareai
+mvn clean package
+copy /Y target\spareai.war C:\apache-tomcat-10.1.44\webapps\
+rmdir /S /Q C:\apache-tomcat-10.1.44\webapps\spareai
 cd /d C:\apache-tomcat-10.1.44\bin
 startup.bat
 ```
 
-Wait until Tomcat finishes deploying `spareai.war`.
+After a successful build, the WAR file is at `spareai\target\spareai.war`.
 
 ## Open the application
 
@@ -235,25 +255,25 @@ Use these URLs after both services are running:
 
 | Service | URL |
 |---|---|
-| Dashboard | `http://localhost:8080/spareai/` |
+| Dashboard | `http://localhost:8080/spareai/ui/dashboard.jsp` |
 | API base | `http://localhost:8080/spareai/api` |
+| Stock parameters API | `http://localhost:8080/spareai/api/parameters/list` |
 | Flask health | `http://localhost:5001/health` |
 
 Example API checks:
 
 ```cmd
-curl http://localhost:8080/spareai/api/inventory
-curl http://localhost:8080/spareai/api/charts/overview
+curl http://localhost:8080/spareai/api/inventory/list
+curl http://localhost:8080/spareai/api/parameters/list
+curl http://localhost:8080/spareai/api/charts/stock-levels
 ```
 
 ## Recommended startup order
 
-1. Start MySQL Server.
-2. Start the Flask service in one Command Prompt window.
-3. Build the WAR with Maven when Java code changes.
-4. Deploy `spareai.war` to Tomcat.
-5. Start Tomcat in another Command Prompt window with the `SPAREAI_*` variables set.
-6. Open the dashboard in your browser.
+1. Apply `db/schema.sql` and (if needed) `db/add-material-parameters.sql`.
+2. Run `spareai\startup.bat` **or** start MySQL, Flask, Maven build, deploy WAR, and Tomcat manually.
+3. Open the dashboard and hard-refresh after deploy (`Ctrl+Shift+R`).
+4. Use **Stock Parameters** in the sidebar to edit per-material thresholds or apply preset defaults.
 
 ## Stop the servers
 
@@ -279,14 +299,16 @@ BSP/
 ├── prophet training data/
 └── spareai/
     ├── pom.xml
-    ├── db/schema.sql
+    ├── startup.bat / redeploy.bat
+    ├── db/
+    │   ├── schema.sql
+    │   └── add-material-parameters.sql
     ├── spareai_real_data.sql
+    ├── DOCUMENTATION.md
     ├── flask-service/
-    │   ├── app.py
-    │   └── requirements.txt
-    └── src/
-        ├── main/java/
-        └── main/webapp/
+    └── src/main/
+        ├── java/
+        └── webapp/
 ```
 
 ## Troubleshooting
@@ -307,12 +329,21 @@ Confirm MySQL is running, the `spareai` database exists, and `SPAREAI_DB_USER` /
 
 Check `http://localhost:5001/health` first. If Flask is not running, the Java API cannot generate forecasts.
 
+### Stock Parameters page missing or API errors
+
+Run `db/add-material-parameters.sql`, then `redeploy.bat` or `startup.bat`, and hard-refresh the browser. If Tomcat still serves an old WAR, delete `webapps\spareai` before copying the new `spareai.war`.
+
+### Dashboard changes not visible after git pull
+
+Rebuild and redeploy the WAR (`redeploy.bat`). The UI is packaged inside `spareai.war`, not served from source folders directly.
+
 ### Prophet install fails on Windows
 
 Use Python 3.11, upgrade `pip`, and install dependencies from an activated virtual environment. If compilation fails, install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and run `pip install -r requirements.txt` again.
 
 ## Additional documentation
 
+- **Full technical reference:** `spareai/DOCUMENTATION.md` (APIs, schema, UI pages, parameters)
 - Product requirements: `SpareAI_PRD.md`
 - Prophet training data notes: `prophet training data/PROPHET_24M_README.md`
-- Backend-focused notes: `spareai/README.md`
+- Backend quick reference: `spareai/README.md`
