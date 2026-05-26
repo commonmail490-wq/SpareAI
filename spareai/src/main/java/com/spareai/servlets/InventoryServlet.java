@@ -1,6 +1,7 @@
 package com.spareai.servlets;
 
 import com.google.gson.JsonObject;
+import com.spareai.dao.ConsumptionDAO;
 import com.spareai.dao.InventoryDAO;
 import com.spareai.model.InventoryItem;
 import com.spareai.util.JsonUtil;
@@ -19,6 +20,7 @@ import java.util.Map;
 
 public class InventoryServlet extends BaseServlet {
     private final InventoryDAO inventoryDAO = new InventoryDAO();
+    private final ConsumptionDAO consumptionDAO = new ConsumptionDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -28,6 +30,12 @@ public class InventoryServlet extends BaseServlet {
         try {
             if (p.equals("/") || p.equals("/list")) {
                 List<InventoryItem> items = inventoryDAO.listAll();
+                Map<String, BigDecimal> avgDaily = consumptionDAO.avgDailyByAllMaterials(
+                        ConsumptionDAO.CONSUMPTION_RATE_LOOKBACK_DAYS);
+                for (InventoryItem it : items) {
+                    BigDecimal rate = avgDaily.get(it.getMaterialCode());
+                    if (rate != null) it.setAvgDailyConsumption(rate);
+                }
                 JsonObject data = new JsonObject();
                 data.add("items", JsonUtil.GSON.toJsonTree(items));
                 data.addProperty("total", items.size());
@@ -122,6 +130,7 @@ public class InventoryServlet extends BaseServlet {
             }
             JsonObject body = JsonUtil.parseBody(req);
             InventoryItem updates = mergeUpdates(existing, body);
+            ParametersServlet.validateParameters(updates);
             inventoryDAO.updateByCode(code, updates);
             JsonObject data = new JsonObject();
             data.addProperty("updated", true);
@@ -185,8 +194,21 @@ public class InventoryServlet extends BaseServlet {
                 : existing.getLocation());
 
         it.setStockQty(body.has("stock_qty") ? body.get("stock_qty").getAsBigDecimal() : existing.getStockQty());
-        it.setReorderLevel(body.has("reorder_level") ? body.get("reorder_level").getAsBigDecimal() : existing.getReorderLevel());
         it.setUnitCost(body.has("unit_cost") ? body.get("unit_cost").getAsBigDecimal() : existing.getUnitCost());
+        InventoryItem withParams = ParametersServlet.mergeParameters(existing, body);
+        it.setReorderLevel(withParams.getReorderLevel());
+        it.setSafetyStock(withParams.getSafetyStock());
+        it.setCriticalPct(withParams.getCriticalPct());
+        it.setUrgentDays(withParams.getUrgentDays());
+        it.setWarningDays(withParams.getWarningDays());
+        it.setOverstockMultiplier(withParams.getOverstockMultiplier());
+        it.setReorderQtyFactor(withParams.getReorderQtyFactor());
+        it.setLeadTimeDays(withParams.getLeadTimeDays());
+        it.setMaxStock(withParams.getMaxStock());
+        it.setMinOrderQty(withParams.getMinOrderQty());
+        it.setAlertsEnabled(withParams.getAlertsEnabled());
+        it.setPriority(withParams.getPriority());
+        it.setParamNotes(withParams.getParamNotes());
         return it;
     }
 

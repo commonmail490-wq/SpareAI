@@ -12,8 +12,22 @@ public class InventoryItem {
     private String location;
     private BigDecimal stockQty;
     private BigDecimal reorderLevel;
+    private BigDecimal safetyStock;
+    private BigDecimal criticalPct;
+    private Integer urgentDays;
+    private Integer warningDays;
+    private BigDecimal overstockMultiplier;
+    private BigDecimal reorderQtyFactor;
+    private Integer leadTimeDays;
+    private BigDecimal maxStock;
+    private BigDecimal minOrderQty;
+    private Boolean alertsEnabled;
+    private Integer priority;
+    private String paramNotes;
     private BigDecimal unitCost;
     private Instant lastUpdated;
+    /** Average daily consumption from consumption_log (rolling window); not persisted. */
+    private BigDecimal avgDailyConsumption;
 
     public InventoryItem() {}
 
@@ -81,6 +95,102 @@ public class InventoryItem {
         this.reorderLevel = reorderLevel;
     }
 
+    public BigDecimal getSafetyStock() {
+        return safetyStock;
+    }
+
+    public void setSafetyStock(BigDecimal safetyStock) {
+        this.safetyStock = safetyStock;
+    }
+
+    public BigDecimal getCriticalPct() {
+        return criticalPct;
+    }
+
+    public void setCriticalPct(BigDecimal criticalPct) {
+        this.criticalPct = criticalPct;
+    }
+
+    public Integer getUrgentDays() {
+        return urgentDays;
+    }
+
+    public void setUrgentDays(Integer urgentDays) {
+        this.urgentDays = urgentDays;
+    }
+
+    public Integer getWarningDays() {
+        return warningDays;
+    }
+
+    public void setWarningDays(Integer warningDays) {
+        this.warningDays = warningDays;
+    }
+
+    public BigDecimal getOverstockMultiplier() {
+        return overstockMultiplier;
+    }
+
+    public void setOverstockMultiplier(BigDecimal overstockMultiplier) {
+        this.overstockMultiplier = overstockMultiplier;
+    }
+
+    public BigDecimal getReorderQtyFactor() {
+        return reorderQtyFactor;
+    }
+
+    public void setReorderQtyFactor(BigDecimal reorderQtyFactor) {
+        this.reorderQtyFactor = reorderQtyFactor;
+    }
+
+    public Integer getLeadTimeDays() {
+        return leadTimeDays;
+    }
+
+    public void setLeadTimeDays(Integer leadTimeDays) {
+        this.leadTimeDays = leadTimeDays;
+    }
+
+    public BigDecimal getMaxStock() {
+        return maxStock;
+    }
+
+    public void setMaxStock(BigDecimal maxStock) {
+        this.maxStock = maxStock;
+    }
+
+    public BigDecimal getMinOrderQty() {
+        return minOrderQty;
+    }
+
+    public void setMinOrderQty(BigDecimal minOrderQty) {
+        this.minOrderQty = minOrderQty;
+    }
+
+    public Boolean getAlertsEnabled() {
+        return alertsEnabled;
+    }
+
+    public void setAlertsEnabled(Boolean alertsEnabled) {
+        this.alertsEnabled = alertsEnabled;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public String getParamNotes() {
+        return paramNotes;
+    }
+
+    public void setParamNotes(String paramNotes) {
+        this.paramNotes = paramNotes;
+    }
+
     public BigDecimal getUnitCost() {
         return unitCost;
     }
@@ -95,5 +205,13 @@ public class InventoryItem {
 
     public void setLastUpdated(Instant lastUpdated) {
         this.lastUpdated = lastUpdated;
+    }
+
+    public BigDecimal getAvgDailyConsumption() {
+        return avgDailyConsumption;
+    }
+
+    public void setAvgDailyConsumption(BigDecimal avgDailyConsumption) {
+        this.avgDailyConsumption = avgDailyConsumption;
     }
 }

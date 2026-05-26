@@ -2527,6 +2527,15 @@ INSERT INTO consumption_log (material_code, consumed_qty, consumption_date, depa
   ('72610200160018', 12551.0, '2025-09-30', 'FIRE &SAFETY MATERIA', 'actual consumption'),
   ('72610200160018', 12551.0, '2025-10-31', 'FIRE &SAFETY MATERIA', 'actual consumption');
 
+-- ── ALIGN DATES (latest month ~15 days before CURDATE) ─────────
+SET @max_dt := (SELECT MAX(consumption_date) FROM consumption_log);
+SET @shift_days := DATEDIFF(DATE_SUB(CURDATE(), INTERVAL 15 DAY), @max_dt);
+UPDATE consumption_log
+SET consumption_date = DATE_ADD(consumption_date, INTERVAL @shift_days DAY);
+
 -- ── VERIFY ─────────────────────────────────────────────────────
 SELECT 'inventory_items' AS tbl, COUNT(*) AS cnt FROM inventory_items
 UNION ALL SELECT 'consumption_log', COUNT(*) FROM consumption_log;
+SELECT MIN(consumption_date) AS min_consumption_date,
+       MAX(consumption_date) AS max_consumption_date
+FROM consumption_log;

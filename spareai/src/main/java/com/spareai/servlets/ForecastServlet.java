@@ -129,15 +129,26 @@ public class ForecastServlet extends BaseServlet {
         boolean useCache = !forceRefresh && cached != null && !forecastDAO.isExpired(cached);
 
         JsonArray forecast;
+        String forecastMethod = null;
+        String materialCategory = null;
+        String forecastGranularity = "monthly";
         boolean cachedFlag;
         if (useCache) {
-            forecast = parseForecastArray(cached.getForecastJson());
+            JsonObject envelope = parseForecastEnvelope(cached.getForecastJson());
+            forecast = envelopeForecast(envelope);
+            forecastMethod = envelopeString(envelope, "forecast_method");
+            materialCategory = envelopeString(envelope, "material_category");
+            String g = envelopeString(envelope, "forecast_granularity");
+            if (g != null) forecastGranularity = g;
             cachedFlag = true;
         } else {
             List<Map<String, Object>> series = consumptionDAO.prophetMonthlySeries(code);
             if (series.size() < 6) {
-                // Graceful fallback: simple moving-average projection if insufficient history.
                 forecast = movingAverageForecast(series, horizonDays);
+                forecastMethod = "moving_average";
+                materialCategory = "INSUFFICIENT_HISTORY";
+                forecastDAO.save(code, horizonDays,
+                        buildEnvelope(forecast, forecastMethod, materialCategory, forecastGranularity).toString());
                 cachedFlag = false;
             } else {
                 JsonObject body = new JsonObject();
@@ -147,8 +158,14 @@ public class ForecastServlet extends BaseServlet {
                 forecast = flask.has("forecast") && flask.get("forecast").isJsonArray()
                         ? flask.getAsJsonArray("forecast")
                         : new JsonArray();
+                forecastMethod = flask.has("forecast_method") ? flask.get("forecast_method").getAsString() : null;
+                materialCategory = flask.has("material_category") ? flask.get("material_category").getAsString() : null;
+                if (flask.has("forecast_granularity")) {
+                    forecastGranularity = flask.get("forecast_granularity").getAsString();
+                }
 
-                forecastDAO.save(code, horizonDays, forecast.toString());
+                forecastDAO.save(code, horizonDays,
+                        buildEnvelope(forecast, forecastMethod, materialCategory, forecastGranularity).toString());
                 cachedFlag = false;
             }
         }
@@ -158,26 +175,58 @@ public class ForecastServlet extends BaseServlet {
         data.addProperty("horizon_days", horizonDays);
         data.addProperty("cached", cachedFlag);
         data.add("forecast", forecast);
+        data.addProperty("forecast_granularity", forecastGranularity);
+        if (forecastMethod != null) data.addProperty("forecast_method", forecastMethod);
+        if (materialCategory != null) data.addProperty("material_category", materialCategory);
         data.addProperty("current_stock_qty", item.getStockQty() == null ? 0 : item.getStockQty().doubleValue());
         data.addProperty("reorder_level", item.getReorderLevel() == null ? 0 : item.getReorderLevel().doubleValue());
         return data;
     }
 
-    private JsonArray parseForecastArray(String raw) {
-        if (raw == null || raw.isBlank()) return new JsonArray();
+    private JsonObject buildEnvelope(JsonArray forecast, String forecastMethod, String materialCategory,
+                                     String forecastGranularity) {
+        JsonObject envelope = new JsonObject();
+        envelope.add("forecast", forecast);
+        if (forecastMethod != null) envelope.addProperty("forecast_method", forecastMethod);
+        if (materialCategory != null) envelope.addProperty("material_category", materialCategory);
+        if (forecastGranularity != null) envelope.addProperty("forecast_granularity", forecastGranularity);
+        return envelope;
+    }
+
+    private static int horizonDaysToMonths(int horizonDays) {
+        return Math.max(1, (int) Math.round(horizonDays / 30.0));
+    }
+
+    private JsonObject parseForecastEnvelope(String raw) {
+        if (raw == null || raw.isBlank()) return new JsonObject();
         try {
             JsonElement el = JsonParser.parseString(raw);
-            if (el != null && el.isJsonArray()) return el.getAsJsonArray();
-            if (el != null && el.isJsonObject() && el.getAsJsonObject().has("forecast")) {
-                JsonElement f = el.getAsJsonObject().get("forecast");
-                if (f.isJsonArray()) return f.getAsJsonArray();
+            if (el != null && el.isJsonObject()) return el.getAsJsonObject();
+            if (el != null && el.isJsonArray()) {
+                JsonObject legacy = new JsonObject();
+                legacy.add("forecast", el.getAsJsonArray());
+                return legacy;
             }
         } catch (Exception ignored) {}
+        return new JsonObject();
+    }
+
+    private JsonArray envelopeForecast(JsonObject envelope) {
+        if (envelope != null && envelope.has("forecast") && envelope.get("forecast").isJsonArray()) {
+            return envelope.getAsJsonArray("forecast");
+        }
         return new JsonArray();
     }
 
+    private String envelopeString(JsonObject envelope, String key) {
+        return envelope != null && envelope.has(key) ? envelope.get(key).getAsString() : null;
+    }
+
+    private JsonArray parseForecastArray(String raw) {
+        return envelopeForecast(parseForecastEnvelope(raw));
+    }
+
     private JsonArray movingAverageForecast(List<Map<String, Object>> series, int horizonDays) {
-        // monthly series -> daily horizon: assume daily forecast by repeating average daily from last 3 months
         BigDecimal sum = BigDecimal.ZERO;
         int n = 0;
         for (int i = Math.max(0, series.size() - 3); i < series.size(); i++) {
@@ -188,13 +237,13 @@ public class ForecastServlet extends BaseServlet {
             }
         }
         BigDecimal avgMonthly = n == 0 ? BigDecimal.ZERO : sum.divide(BigDecimal.valueOf(n), 6, RoundingMode.HALF_UP);
-        BigDecimal avgDaily = avgMonthly.divide(BigDecimal.valueOf(30), 6, RoundingMode.HALF_UP);
+        double yhat = avgMonthly.doubleValue();
+        int horizonMonths = horizonDaysToMonths(horizonDays);
+        LocalDate start = LocalDate.now().withDayOfMonth(1).plusMonths(1);
 
-        LocalDate start = LocalDate.now().plusDays(1);
         JsonArray out = new JsonArray();
-        for (int i = 0; i < horizonDays; i++) {
-            LocalDate ds = start.plusDays(i);
-            double yhat = avgDaily.doubleValue();
+        for (int i = 0; i < horizonMonths; i++) {
+            LocalDate ds = start.plusMonths(i);
             JsonObject row = new JsonObject();
             row.addProperty("ds", ds.toString());
             row.addProperty("yhat", yhat);
@@ -282,13 +331,16 @@ public class ForecastServlet extends BaseServlet {
         for (InventoryItem it : items) {
             String code = it.getMaterialCode();
             BigDecimal stock = it.getStockQty() == null ? BigDecimal.ZERO : it.getStockQty();
-            BigDecimal avgDaily = avgDailyConsumption(code, 90);
+            BigDecimal avgDaily = consumptionDAO.avgDailyConsumption(
+                    code, ConsumptionDAO.CONSUMPTION_RATE_LOOKBACK_DAYS);
             if (avgDaily.signum() <= 0) continue;
 
             BigDecimal daysToZero = stock.divide(avgDaily, 2, RoundingMode.HALF_UP);
             if (daysToZero.compareTo(BigDecimal.valueOf(30)) <= 0) {
                 JsonObject row = new JsonObject();
                 row.addProperty("material_code", code);
+                row.addProperty("item_name", it.getItemName());
+                row.addProperty("material_description", it.getItemName());
                 row.addProperty("stock_qty", stock.doubleValue());
                 row.addProperty("avg_daily_consumption", avgDaily.doubleValue());
                 row.addProperty("days_to_zero_estimate", daysToZero.doubleValue());
@@ -300,18 +352,4 @@ public class ForecastServlet extends BaseServlet {
         ok(resp, data);
     }
 
-    private BigDecimal avgDailyConsumption(String materialCode, int days) throws SQLException {
-        String sql = "SELECT COALESCE(SUM(consumed_qty), 0) AS total " +
-                "FROM consumption_log WHERE material_code = ? AND consumption_date >= (CURDATE() - INTERVAL ? DAY)";
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, materialCode);
-            ps.setInt(2, days);
-            try (ResultSet rs = ps.executeQuery()) {
-                BigDecimal total = rs.next() ? rs.getBigDecimal("total") : BigDecimal.ZERO;
-                if (total == null) total = BigDecimal.ZERO;
-                return total.divide(BigDecimal.valueOf(days), 6, RoundingMode.HALF_UP);
-            }
-        }
-    }
 }

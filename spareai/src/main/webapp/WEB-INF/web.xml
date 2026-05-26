@@ -38,6 +38,15 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>ParametersServlet</servlet-name>
+        <servlet-class>com.spareai.servlets.ParametersServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ParametersServlet</servlet-name>
+        <url-pattern>/api/parameters/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>ConsumptionServlet</servlet-name>
         <servlet-class>com.spareai.servlets.ConsumptionServlet</servlet-class>
     </servlet>
@@ -62,6 +71,15 @@
     <servlet-mapping>
         <servlet-name>ChartServlet</servlet-name>
         <url-pattern>/api/charts/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminForecastServlet</servlet-name>
+        <servlet-class>com.spareai.servlets.AdminForecastServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminForecastServlet</servlet-name>
+        <url-pattern>/api/admin/forecast/*</url-pattern>
     </servlet-mapping>
 
 </web-app>

@@ -6,6 +6,7 @@ import com.spareai.util.DBConnection;
 import com.spareai.util.JsonUtil;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -15,12 +16,18 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ConsumptionDAO {
+    /** Rolling window for avg daily rate (covers seed data through ~12 months). */
+    public static final int CONSUMPTION_RATE_LOOKBACK_DAYS = 365;
+    /** Window for overview "monthly consumption" KPI. */
+    public static final int MONTHLY_TOTAL_LOOKBACK_DAYS = 30;
+
     private final InventoryDAO inventoryDAO = new InventoryDAO();
 
     private ConsumptionLog mapRow(ResultSet rs) throws SQLException {
@@ -304,6 +311,55 @@ public class ConsumptionDAO {
         }
     }
 
+    public BigDecimal avgDailyConsumption(String materialCode, int days) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(consumed_qty), 0) AS total " +
+                "FROM consumption_log WHERE material_code = ? AND consumption_date >= (CURDATE() - INTERVAL ? DAY)";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, materialCode);
+            ps.setInt(2, days);
+            try (ResultSet rs = ps.executeQuery()) {
+                BigDecimal total = rs.next() ? rs.getBigDecimal("total") : BigDecimal.ZERO;
+                if (total == null) total = BigDecimal.ZERO;
+                return total.divide(BigDecimal.valueOf(days), 6, RoundingMode.HALF_UP);
+            }
+        }
+    }
+
+    public Map<String, BigDecimal> avgDailyByAllMaterials(int days) throws SQLException {
+        String sql = "SELECT material_code, COALESCE(SUM(consumed_qty), 0) AS total " +
+                "FROM consumption_log WHERE consumption_date >= (CURDATE() - INTERVAL ? DAY) " +
+                "GROUP BY material_code HAVING total > 0";
+        Map<String, BigDecimal> out = new HashMap<>();
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, days);
+            try (ResultSet rs = ps.executeQuery()) {
+                BigDecimal divisor = BigDecimal.valueOf(days);
+                while (rs.next()) {
+                    BigDecimal total = rs.getBigDecimal("total");
+                    if (total == null) continue;
+                    out.put(
+                            rs.getString("material_code"),
+                            total.divide(divisor, 6, RoundingMode.HALF_UP));
+                }
+            }
+        }
+        return out;
+    }
+
+    public BigDecimal totalConsumedInLookback(int days) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(consumed_qty), 0) AS total FROM consumption_log " +
+                "WHERE consumption_date >= (CURDATE() - INTERVAL ? DAY)";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, days);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getBigDecimal("total") : BigDecimal.ZERO;
+            }
+        }
+    }
+
     /**
      * Returns consumption time series aggregated to monthly granularity as required by Prophet.
      * Output shape: [{ "ds": "YYYY-MM-01", "y": <sum> }, ...] ordered by ds.
@@ -324,6 +380,32 @@ public class ConsumptionDAO {
                     out.add(row);
                 }
             }
+        }
+        return out;
+    }
+
+    /**
+     * Converts monthly consumption totals to average daily rates for Prophet daily forecasts.
+     * Each {@code y} becomes {@code monthly_total / days_in_month} for the month of {@code ds}.
+     */
+    public static List<Map<String, Object>> monthlySeriesToDailyRates(List<Map<String, Object>> monthlySeries) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> row : monthlySeries) {
+            String dsStr = String.valueOf(row.get("ds"));
+            LocalDate monthStart = LocalDate.parse(dsStr);
+            int daysInMonth = monthStart.lengthOfMonth();
+            BigDecimal monthly;
+            Object y = row.get("y");
+            if (y instanceof BigDecimal) {
+                monthly = (BigDecimal) y;
+            } else {
+                monthly = new BigDecimal(String.valueOf(y));
+            }
+            BigDecimal daily = monthly.divide(BigDecimal.valueOf(daysInMonth), 6, RoundingMode.HALF_UP);
+            Map<String, Object> dailyRow = new HashMap<>();
+            dailyRow.put("ds", dsStr);
+            dailyRow.put("y", daily);
+            out.add(dailyRow);
         }
         return out;
     }

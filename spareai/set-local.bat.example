@@ -1,0 +1,10 @@
+@echo off
+rem Copy this file to set-local.bat and edit paths for your machine.
+rem start-all.bat and redeploy.bat load set-local.bat automatically.
+
+set "CATALINA_HOME=D:\tomcat\apache-tomcat-10.1.54"
+set "VENV_DIR=%~dp0flask-service\venv"
+
+rem Optional MySQL / SpareAI settings for Tomcat (uncomment if needed):
+rem set "SPAREAI_DB_PASSWORD=your_mysql_password"
+rem set "SPAREAI_FLASK_URL=http://localhost:5001"

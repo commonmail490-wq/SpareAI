@@ -6,13 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpareAI — Inventory Dashboard</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/spareai.css">
+  <meta name="spareai-ui-build" content="material-parameters">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/spareai.css?v=param-presets-full">
 </head>
 <body>
 <script>
@@ -38,6 +41,7 @@
       <li><a href="#inventory" class="nav-item" data-page="inventory">🗄 Inventory</a></li>
       <li><a href="#critical" class="nav-item" data-page="critical">⚠ Critical Stock</a></li>
       <li><a href="#forecast" class="nav-item" data-page="forecast">🔮 Forecast</a></li>
+      <li><a href="#parameters" class="nav-item" data-page="parameters">⚙ Stock Parameters</a></li>
     </ul>
   </aside>
 
@@ -55,18 +59,56 @@
       <div id="overview-alerts" class="alerts-banner" hidden></div>
 
       <div class="kpi-grid kpi-grid--six">
-        <div class="kpi-tile" id="kpi-total-materials"><span class="kpi-label">Total Materials</span><span class="kpi-value">—</span></div>
-        <div class="kpi-tile" id="kpi-total-departments"><span class="kpi-label">Total Departments</span><span class="kpi-value">—</span></div>
+        <div class="kpi-tile tile-dropdown-wrapper" id="tile-total-materials">
+          <span class="kpi-label">Total Materials</span>
+          <span class="kpi-value" id="kpi-total-materials">—</span>
+          <ul class="tile-dropdown-menu" id="dropdown-materials">
+            <li><input class="tile-dropdown-search" placeholder="Search code, name, or category…" id="search-materials" type="text" autocomplete="off"></li>
+          </ul>
+        </div>
+        <div class="kpi-tile tile-dropdown-wrapper" id="tile-total-depts">
+          <span class="kpi-label">Total Departments</span>
+          <span class="kpi-value" id="kpi-total-departments">—</span>
+          <ul class="tile-dropdown-menu" id="dropdown-departments">
+            <li><input class="tile-dropdown-search" placeholder="Search department..." id="search-departments" type="text"></li>
+          </ul>
+        </div>
         <div class="kpi-tile" id="kpi-total-value"><span class="kpi-label">Total Stock Value (₹)</span><span class="kpi-value">—</span></div>
-        <div class="kpi-tile" id="kpi-critical"><span class="kpi-label">Critical Items</span><span class="kpi-value">—</span></div>
-        <div class="kpi-tile" id="kpi-forecast-shortages"><span class="kpi-label">Forecasted Shortages</span><span class="kpi-value">—</span></div>
-        <div class="kpi-tile" id="kpi-zero-stock"><span class="kpi-label">Items at Zero Stock</span><span class="kpi-value">—</span></div>
+        <div class="kpi-tile" id="tile-critical-items" style="cursor:pointer" title="Click to view critical items">
+          <span class="kpi-label">Critical Items</span>
+          <span class="kpi-value" id="kpi-critical">—</span>
+          <small style="color:var(--text-muted);font-size:0.7rem">Click to view ↓</small>
+        </div>
+        <div class="kpi-tile" id="tile-forecast-shortages" style="cursor:pointer" title="Click to view forecasted shortages">
+          <span class="kpi-label">Forecasted Shortages</span>
+          <span class="kpi-value" id="kpi-forecast-shortages">—</span>
+          <small style="color:var(--text-muted);font-size:0.7rem">Click to view ↓</small>
+        </div>
+        <div class="kpi-tile" id="tile-zero-stock" style="cursor:pointer" title="Click to view zero stock items">
+          <span class="kpi-label">Items at Zero Stock</span>
+          <span class="kpi-value" id="kpi-zero-stock">—</span>
+          <small style="color:var(--text-muted);font-size:0.7rem">Click to view ↓</small>
+        </div>
+      </div>
+
+      <div id="overview-drilldown-panel" class="drilldown-panel" hidden>
+        <div class="drilldown-header">
+          <h3 id="drilldown-title" class="drilldown-title"></h3>
+          <button type="button" id="drilldown-close" class="drilldown-close-btn" aria-label="Close">✕</button>
+        </div>
+        <div id="drilldown-body" class="drilldown-body"></div>
       </div>
 
       <div class="quick-kpi-row" id="quick-kpis">
         <div class="quick-kpi"><span class="quick-kpi-label">Fastest moving</span><span class="quick-kpi-value" id="qk-fastest">—</span></div>
         <div class="quick-kpi"><span class="quick-kpi-label">Slowest moving</span><span class="quick-kpi-value" id="qk-slowest">—</span></div>
-        <div class="quick-kpi"><span class="quick-kpi-label">Reorder alerts</span><span class="quick-kpi-value" id="qk-reorder">—</span></div>
+        <div class="quick-kpi tile-dropdown-wrapper" id="tile-reorder-alerts">
+          <span class="quick-kpi-label">Reorder alerts</span>
+          <span class="quick-kpi-value" id="qk-reorder">—</span>
+          <ul class="tile-dropdown-menu" id="dropdown-reorder">
+            <li><input class="tile-dropdown-search" placeholder="Search code, name, or category…" id="search-reorder" type="text" autocomplete="off"></li>
+          </ul>
+        </div>
         <div class="quick-kpi quick-kpi--spark">
           <span class="quick-kpi-label">Monthly consumption</span>
           <span class="quick-kpi-value" id="kpi-monthly">—</span>
@@ -309,7 +351,7 @@
     <section id="page-forecast" class="page-section section-card">
       <div class="section-header-row">
         <div>
-          <h2 class="section-title">🔮 Demand Forecast</h2>
+          <h2 class="section-title">🔮 Demand Forecast <span id="forecast-method-badge" class="forecast-method-badge" hidden></span></h2>
           <p id="forecast-meta" class="forecast-meta"></p>
         </div>
         <div class="forecast-controls no-print">
@@ -326,27 +368,81 @@
       </div>
 
       <div class="kpi-grid kpi-grid--four" id="forecast-stats">
-        <div class="kpi-tile"><span class="kpi-label">Average Daily Demand</span><span class="kpi-value" id="fs-avg">—</span></div>
-        <div class="kpi-tile"><span class="kpi-label">Peak Demand</span><span class="kpi-value" id="fs-peak">—</span></div>
-        <div class="kpi-tile"><span class="kpi-label">Lowest Demand</span><span class="kpi-value" id="fs-low">—</span></div>
+        <div class="kpi-tile"><span class="kpi-label">Avg Monthly Demand</span><span class="kpi-value" id="fs-avg">—</span></div>
+        <div class="kpi-tile"><span class="kpi-label">Peak Month</span><span class="kpi-value" id="fs-peak">—</span></div>
+        <div class="kpi-tile"><span class="kpi-label">Lowest Month</span><span class="kpi-value" id="fs-low">—</span></div>
         <div class="kpi-tile"><span class="kpi-label">Total Forecasted</span><span class="kpi-value" id="fs-total">—</span></div>
       </div>
 
       <div class="chart-section chart-section--forecast">
+        <p class="chart-section-caption">Monthly consumption (kg) — historical actuals and forward forecast</p>
         <div class="chart-canvas-wrap chart-box--forecast">
           <canvas id="chart-forecast"></canvas>
-          <p id="forecast-placeholder" class="placeholder-msg">Select a material above to view its forecast.</p>
+          <p id="forecast-placeholder" class="placeholder-msg">Select a material above to view history and forecast.</p>
         </div>
         <div class="chart-state" id="forecast-chart-state"></div>
       </div>
 
-      <div class="chart-section" id="chart-section-historical">
-        <h3>Historical Consumption</h3>
-        <div class="chart-canvas-wrap"><canvas id="chart-historical"></canvas></div>
-        <div class="chart-state" id="historical-chart-state"></div>
+      <div class="procurement-box" id="procurement-box">Select a material to see procurement guidance.</div>
+    </section>
+
+    <section id="page-parameters" class="page-section section-card">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-title">⚙ Stock Parameters</h2>
+          <p class="section-subtitle">Per-material reorder levels, alert thresholds, and procurement rules. Changes apply across Overview, Inventory, and Critical Stock.</p>
+        </div>
+        <div class="header-actions no-print">
+          <button type="button" class="btn-secondary" id="btn-preset-original" title="Restore reorder levels from Excel import; apply legacy alert thresholds">Original defaults (Excel)</button>
+          <button type="button" class="btn-secondary" id="btn-preset-new" title="Reorder from 14d×2× consumption, safety=40% reorder, new thresholds, min order 1, max=2.5× reorder">New defaults</button>
+          <button type="button" class="btn-secondary" id="btn-export-parameters">Export CSV</button>
+          <button type="button" class="btn-primary" id="btn-save-parameters" disabled>Save changes</button>
+        </div>
       </div>
 
-      <div class="procurement-box" id="procurement-box">Select a material to see procurement guidance.</div>
+      <p id="param-record-count" class="record-counter">Showing 0 materials</p>
+      <div id="param-status" class="param-status-banner" hidden></div>
+
+      <div class="filters-row no-print">
+        <input type="search" id="param-search" placeholder="Search code, name, category…" class="search-input" autocomplete="off">
+        <select id="param-category-filter"><option value="">All categories</option></select>
+        <select id="param-alerts-filter">
+          <option value="">Alerts: All</option>
+          <option value="on">Alerts on</option>
+          <option value="off">Alerts off</option>
+        </select>
+      </div>
+
+      <div class="table-wrapper table-wrapper--params">
+        <table class="data-table params-table" id="parameters-table">
+          <thead>
+            <tr>
+              <th class="param-sticky param-sticky--code" data-sort="materialCode">Material code</th>
+              <th class="param-sticky param-sticky--name" data-sort="itemName">Material name</th>
+              <th data-sort="category">Category</th>
+              <th class="num">Reorder</th>
+              <th class="num" title="Leave blank to use reorder level">Safety stock</th>
+              <th class="num" title="Fraction of reorder (0.5 = 50%)">Critical %</th>
+              <th class="num">Urgent (days)</th>
+              <th class="num">Warning (days)</th>
+              <th class="num">Overstock ×</th>
+              <th class="num">Reorder qty ×</th>
+              <th class="num">Lead time</th>
+              <th class="num">Max stock</th>
+              <th class="num">Min order</th>
+              <th class="num">Priority</th>
+              <th>Alerts</th>
+              <th>Notes</th>
+              <th class="no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="param-tbody">
+            <tr><td colspan="17" class="loading-row">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination no-print" id="param-pagination"></div>
     </section>
 
   </main>
@@ -354,7 +450,7 @@
   <script>
     window.CONTEXT_PATH = '${pageContext.request.contextPath}';
   </script>
-  <script src="${pageContext.request.contextPath}/assets/spareai-dashboard.js"></script>
+  <script src="${pageContext.request.contextPath}/assets/spareai-dashboard.js?v=excel-original-preset"></script>
 
 </body>
 </html>

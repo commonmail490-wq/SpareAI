@@ -41,6 +41,14 @@ public class ForecastDAO {
         return exp == null || Instant.now().isAfter(exp);
     }
 
+    public int clearAll() throws SQLException {
+        String sql = "DELETE FROM forecast_cache";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            return ps.executeUpdate();
+        }
+    }
+
     public void save(String materialCode, int horizonDays, String forecastJson) throws SQLException {
         Instant now = Instant.now();
         Instant expires = now.plus(24, ChronoUnit.HOURS);

@@ -1,0 +1,502 @@
+{
+  "45120004301033": {
+    "reorder_level": 3133.5,
+    "stock_qty": 1972.0,
+    "unit_cost": 3007.5531
+  },
+  "51011101050013": {
+    "reorder_level": 30094.5,
+    "stock_qty": 88032.0,
+    "unit_cost": 67.9939
+  },
+  "51011109000271": {
+    "reorder_level": 27150.0,
+    "stock_qty": 2300.0,
+    "unit_cost": 51.25
+  },
+  "51310101050047": {
+    "reorder_level": 5895.0,
+    "stock_qty": 8200.0,
+    "unit_cost": 40.4662
+  },
+  "51310101050249": {
+    "reorder_level": 6465.0,
+    "stock_qty": 16926.0,
+    "unit_cost": 16.7749
+  },
+  "51310101050675": {
+    "reorder_level": 4500.0,
+    "stock_qty": 2115.0,
+    "unit_cost": 280.2814
+  },
+  "51310101050678": {
+    "reorder_level": 4629.0,
+    "stock_qty": 0.0,
+    "unit_cost": 159.83
+  },
+  "51310101050681": {
+    "reorder_level": 7185.0,
+    "stock_qty": 2519.0,
+    "unit_cost": 68.8388
+  },
+  "51810101300016": {
+    "reorder_level": 2931.0,
+    "stock_qty": 34266.0,
+    "unit_cost": 9.5213
+  },
+  "70410000080006": {
+    "reorder_level": 10500.0,
+    "stock_qty": 13815.0,
+    "unit_cost": 97.6471
+  },
+  "70410600080046": {
+    "reorder_level": 21406.5,
+    "stock_qty": 102966.9,
+    "unit_cost": 24.7637
+  },
+  "70410600080047": {
+    "reorder_level": 159000.0,
+    "stock_qty": 665080.0,
+    "unit_cost": 4.4854
+  },
+  "70410600080051": {
+    "reorder_level": 123000.0,
+    "stock_qty": 377879.0,
+    "unit_cost": 43.1485
+  },
+  "70410600080100": {
+    "reorder_level": 15000.0,
+    "stock_qty": 57160.0,
+    "unit_cost": 9.8034
+  },
+  "70410600081423": {
+    "reorder_level": 5400.0,
+    "stock_qty": 25100.0,
+    "unit_cost": 20.82
+  },
+  "70410900040259": {
+    "reorder_level": 3549.45,
+    "stock_qty": 20830.0,
+    "unit_cost": 125.6907
+  },
+  "70410900220050": {
+    "reorder_level": 4242.0,
+    "stock_qty": 3816.0,
+    "unit_cost": 110.0
+  },
+  "70410900220052": {
+    "reorder_level": 4620.0,
+    "stock_qty": 3990.0,
+    "unit_cost": 72.01
+  },
+  "71010200080002": {
+    "reorder_level": 5130.0,
+    "stock_qty": 17640.5,
+    "unit_cost": 180.8447
+  },
+  "71010400200005": {
+    "reorder_level": 3228.0,
+    "stock_qty": 18146.25,
+    "unit_cost": 127.7361
+  },
+  "71210000040032": {
+    "reorder_level": 15289.8,
+    "stock_qty": 5640.7,
+    "unit_cost": 252.2308
+  },
+  "71210000040033": {
+    "reorder_level": 5733.0,
+    "stock_qty": 13832.0,
+    "unit_cost": 252.8609
+  },
+  "71210000040034": {
+    "reorder_level": 3276.0,
+    "stock_qty": 546.0,
+    "unit_cost": 181.1304
+  },
+  "71210000120008": {
+    "reorder_level": 3276.0,
+    "stock_qty": 608.0,
+    "unit_cost": 166.66
+  },
+  "71210000120010": {
+    "reorder_level": 20475.0,
+    "stock_qty": 2002.0,
+    "unit_cost": 300.3448
+  },
+  "71210000240006": {
+    "reorder_level": 16926.0,
+    "stock_qty": 8079.0,
+    "unit_cost": 292.573
+  },
+  "71210100040128": {
+    "reorder_level": 4095.0,
+    "stock_qty": 3570.0,
+    "unit_cost": 142.28
+  },
+  "71210100040130": {
+    "reorder_level": 7245.0,
+    "stock_qty": 6750.0,
+    "unit_cost": 140.5093
+  },
+  "71210100040131": {
+    "reorder_level": 36540.0,
+    "stock_qty": 23310.0,
+    "unit_cost": 141.9173
+  },
+  "71210100040133": {
+    "reorder_level": 6615.0,
+    "stock_qty": 3150.0,
+    "unit_cost": 141.4771
+  },
+  "71210100040134": {
+    "reorder_level": 23310.0,
+    "stock_qty": 8275.0,
+    "unit_cost": 130.6306
+  },
+  "71210100040138": {
+    "reorder_level": 9765.0,
+    "stock_qty": 1260.0,
+    "unit_cost": 163.8676
+  },
+  "71210100040139": {
+    "reorder_level": 6615.0,
+    "stock_qty": 8190.0,
+    "unit_cost": 133.8229
+  },
+  "71210100040140": {
+    "reorder_level": 5355.0,
+    "stock_qty": 840.0,
+    "unit_cost": 153.73
+  },
+  "71210100080046": {
+    "reorder_level": 37485.0,
+    "stock_qty": 35280.0,
+    "unit_cost": 133.7543
+  },
+  "71210100080069": {
+    "reorder_level": 4410.0,
+    "stock_qty": 630.0,
+    "unit_cost": 146.31
+  },
+  "71210100080070": {
+    "reorder_level": 3750.0,
+    "stock_qty": 5764.0,
+    "unit_cost": 146.6741
+  },
+  "71210100080071": {
+    "reorder_level": 20160.0,
+    "stock_qty": 6720.0,
+    "unit_cost": 155.3688
+  },
+  "71210100080075": {
+    "reorder_level": 4425.0,
+    "stock_qty": 3770.0,
+    "unit_cost": 152.88
+  },
+  "71210100080110": {
+    "reorder_level": 7560.0,
+    "stock_qty": 16170.0,
+    "unit_cost": 200.1062
+  },
+  "71210100080127": {
+    "reorder_level": 13545.0,
+    "stock_qty": 9240.0,
+    "unit_cost": 190.5216
+  },
+  "71210100080128": {
+    "reorder_level": 3150.0,
+    "stock_qty": 11550.0,
+    "unit_cost": 188.4717
+  },
+  "71210100160013": {
+    "reorder_level": 14175.0,
+    "stock_qty": 0.0,
+    "unit_cost": 152.95
+  },
+  "71210100160016": {
+    "reorder_level": 14955.0,
+    "stock_qty": 1740.0,
+    "unit_cost": 153.7669
+  },
+  "71210100160017": {
+    "reorder_level": 4680.0,
+    "stock_qty": 6834.0,
+    "unit_cost": 205.9999
+  },
+  "71210100160041": {
+    "reorder_level": 3465.0,
+    "stock_qty": 1980.0,
+    "unit_cost": 147.54
+  },
+  "71210100280049": {
+    "reorder_level": 5355.0,
+    "stock_qty": 17860.0,
+    "unit_cost": 158.5577
+  },
+  "71210100320040": {
+    "reorder_level": 7875.0,
+    "stock_qty": 10500.0,
+    "unit_cost": 140.7577
+  },
+  "71210100360063": {
+    "reorder_level": 6300.0,
+    "stock_qty": 6939.0,
+    "unit_cost": 162.6991
+  },
+  "71210100360065": {
+    "reorder_level": 4560.0,
+    "stock_qty": 15538.0,
+    "unit_cost": 160.0625
+  },
+  "71210100360096": {
+    "reorder_level": 3150.0,
+    "stock_qty": 5250.0,
+    "unit_cost": 161.1686
+  },
+  "71210200040017": {
+    "reorder_level": 8820.0,
+    "stock_qty": 2100.0,
+    "unit_cost": 202.6287
+  },
+  "71301000401580": {
+    "reorder_level": 3000.0,
+    "stock_qty": 22000.0,
+    "unit_cost": 19.594
+  },
+  "71510000120511": {
+    "reorder_level": 30708.0,
+    "stock_qty": 51726.0,
+    "unit_cost": 224.4226
+  },
+  "71510300000018": {
+    "reorder_level": 75300.0,
+    "stock_qty": 74090.0,
+    "unit_cost": 51.22
+  },
+  "71510300000020": {
+    "reorder_level": 153000.0,
+    "stock_qty": 55880.0,
+    "unit_cost": 52.8602
+  },
+  "71510300040204": {
+    "reorder_level": 15375.0,
+    "stock_qty": 11500.0,
+    "unit_cost": 73.4802
+  },
+  "71510300040326": {
+    "reorder_level": 14400.0,
+    "stock_qty": 39800.0,
+    "unit_cost": 156.1112
+  },
+  "71510300040327": {
+    "reorder_level": 10800.0,
+    "stock_qty": 23320.0,
+    "unit_cost": 87.0
+  },
+  "71510300040358": {
+    "reorder_level": 3750.0,
+    "stock_qty": 9300.0,
+    "unit_cost": 60.412
+  },
+  "71510300040471": {
+    "reorder_level": 3232.5,
+    "stock_qty": 1525.0,
+    "unit_cost": 50.0
+  },
+  "71510300080243": {
+    "reorder_level": 20100.0,
+    "stock_qty": 52800.0,
+    "unit_cost": 39.594
+  },
+  "71510300080253": {
+    "reorder_level": 13200.0,
+    "stock_qty": 86050.0,
+    "unit_cost": 26.9972
+  },
+  "71510300080281": {
+    "reorder_level": 4500.0,
+    "stock_qty": 8000.0,
+    "unit_cost": 68.0993
+  },
+  "71510400040014": {
+    "reorder_level": 129000.0,
+    "stock_qty": 174960.0,
+    "unit_cost": 18.0
+  },
+  "71510400080024": {
+    "reorder_level": 6712.5,
+    "stock_qty": 1783.0,
+    "unit_cost": 148.619
+  },
+  "71511000080546": {
+    "reorder_level": 11250.0,
+    "stock_qty": 31650.0,
+    "unit_cost": 23.3673
+  },
+  "71511000080847": {
+    "reorder_level": 6187.5,
+    "stock_qty": 20800.0,
+    "unit_cost": 95.0075
+  },
+  "71511000080852": {
+    "reorder_level": 12375.0,
+    "stock_qty": 29500.0,
+    "unit_cost": 29.0633
+  },
+  "71511000080977": {
+    "reorder_level": 9675.0,
+    "stock_qty": 60000.0,
+    "unit_cost": 97.2235
+  },
+  "71511000080980": {
+    "reorder_level": 25267.5,
+    "stock_qty": 77430.0,
+    "unit_cost": 53.4446
+  },
+  "71511000081080": {
+    "reorder_level": 6750.0,
+    "stock_qty": 25750.0,
+    "unit_cost": 120.0
+  },
+  "71511000081561": {
+    "reorder_level": 4224.0,
+    "stock_qty": 35800.0,
+    "unit_cost": 353.76
+  },
+  "71511000081685": {
+    "reorder_level": 191700.0,
+    "stock_qty": 279100.0,
+    "unit_cost": 73.0
+  },
+  "71511000081688": {
+    "reorder_level": 14949.0,
+    "stock_qty": 16365.0,
+    "unit_cost": 0.01
+  },
+  "71511000081914": {
+    "reorder_level": 85500.0,
+    "stock_qty": 212800.0,
+    "unit_cost": 72.0
+  },
+  "71511000081915": {
+    "reorder_level": 24000.0,
+    "stock_qty": 15100.0,
+    "unit_cost": 25.0
+  },
+  "71910100360009": {
+    "reorder_level": 15000.0,
+    "stock_qty": 0.0,
+    "unit_cost": 8.94
+  },
+  "71910500100092": {
+    "reorder_level": 4500.0,
+    "stock_qty": 12440.0,
+    "unit_cost": 62.9993
+  },
+  "71910500100132": {
+    "reorder_level": 482400.0,
+    "stock_qty": 529880.0,
+    "unit_cost": 3.4
+  },
+  "71910500100138": {
+    "reorder_level": 4578.0,
+    "stock_qty": 24276.0,
+    "unit_cost": 48.2464
+  },
+  "71910500100139": {
+    "reorder_level": 34122.0,
+    "stock_qty": 5500.0,
+    "unit_cost": 52.6967
+  },
+  "71910500100167": {
+    "reorder_level": 7345.5,
+    "stock_qty": 66365.6,
+    "unit_cost": 85.5705
+  },
+  "71910500100209": {
+    "reorder_level": 30000.0,
+    "stock_qty": 78000.0,
+    "unit_cost": 18.95
+  },
+  "71910500100248": {
+    "reorder_level": 3583.5,
+    "stock_qty": 15986.9,
+    "unit_cost": 13.8011
+  },
+  "71910500100629": {
+    "reorder_level": 6750.0,
+    "stock_qty": 21400.0,
+    "unit_cost": 17.0774
+  },
+  "71910500105214": {
+    "reorder_level": 8631.0,
+    "stock_qty": 34296.88,
+    "unit_cost": 53.0885
+  },
+  "72203003100013": {
+    "reorder_level": 18765.0,
+    "stock_qty": 95191.0,
+    "unit_cost": 6.1375
+  },
+  "72203003100014": {
+    "reorder_level": 16720.29,
+    "stock_qty": 103611.58,
+    "unit_cost": 14.8205
+  },
+  "72203003100015": {
+    "reorder_level": 9495.6,
+    "stock_qty": 63499.6,
+    "unit_cost": 9.0666
+  },
+  "72203003100016": {
+    "reorder_level": 8970.0,
+    "stock_qty": 39840.0,
+    "unit_cost": 21.8699
+  },
+  "72203003300001": {
+    "reorder_level": 3375.0,
+    "stock_qty": 10300.0,
+    "unit_cost": 40.7398
+  },
+  "72203003300002": {
+    "reorder_level": 9150.0,
+    "stock_qty": 43546.0,
+    "unit_cost": 67.3551
+  },
+  "72205007420004": {
+    "reorder_level": 3450.0,
+    "stock_qty": 13430.0,
+    "unit_cost": 27.0
+  },
+  "72410200040032": {
+    "reorder_level": 36000.0,
+    "stock_qty": 9597.0,
+    "unit_cost": 174.9013
+  },
+  "72504003000069": {
+    "reorder_level": 38250.0,
+    "stock_qty": 12750.0,
+    "unit_cost": 11.3098
+  },
+  "72505004000007": {
+    "reorder_level": 3000.0,
+    "stock_qty": 4855.0,
+    "unit_cost": 109.7733
+  },
+  "72505004200149": {
+    "reorder_level": 24453.0,
+    "stock_qty": 9331.0,
+    "unit_cost": 162.2272
+  },
+  "72610100360015": {
+    "reorder_level": 15136.5,
+    "stock_qty": 242095.0,
+    "unit_cost": 48.2052
+  },
+  "72610200160018": {
+    "reorder_level": 18826.5,
+    "stock_qty": 143499.5,
+    "unit_cost": 1.4034
+  }
+}
